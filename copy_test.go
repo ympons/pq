@@ -98,6 +98,16 @@ func TestCopyInRaiseStmtTrigger(t *testing.T) {
 	db := openTestConn(t)
 	defer db.Close()
 
+	if getServerVersion(t, db) < 90000 {
+		var exists int
+		err := db.QueryRow("SELECT 1 FROM pg_language WHERE lanname = 'plpgsql'").Scan(&exists)
+		if err == sql.ErrNoRows {
+			t.Skip("language PL/PgSQL does not exist; skipping TestCopyInRaiseStmtTrigger")
+		} else if err != nil {
+			t.Fatal(err)
+		}
+	}
+
 	txn, err := db.Begin()
 	if err != nil {
 		t.Fatal(err)
